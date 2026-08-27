@@ -8,11 +8,9 @@ st.title("🤖 Анализатор и Оптимизатор сеточного
 
 st.sidebar.header("Настройки симуляции")
 
-coin_list = [
-    "LIT/USDT", "SOL/USDT", "BTC/USDT", "ETH/USDT", 
-    "XRP/USDT", "ONDO/USDT", "MNT/USDT", "SPCX/USDT"
-]
-symbol = st.sidebar.selectbox("Торговая пара", coin_list)
+# Поле для ручного ввода монеты
+symbol_input = st.sidebar.text_input("Торговая пара", value="LIT/USDT")
+symbol = symbol_input.upper().strip() # Автоматически делает буквы заглавными и убирает случайные пробелы
 days_to_fetch = st.sidebar.slider("Период истории (дней)", 7, 180, 90)
 
 st.sidebar.subheader("Стратегия")
