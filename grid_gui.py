@@ -138,7 +138,7 @@ def run_simulation_core(step_to_test, df_data):
 
 if st.sidebar.button("🚀 Запустить симуляцию", type="primary"):
     with st.spinner(f'Загрузка свечей {symbol} с Bybit за {days_to_fetch} дней...'):
-        exchange = ccxt.bybit({'enableRateLimit': True})
+        exchange = ccxt.kucoin({'enableRateLimit': True})
         since = exchange.milliseconds() - (days_to_fetch * 24 * 60 * 60 * 1000)
         all_ohlcv = []
         
