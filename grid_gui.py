@@ -142,14 +142,15 @@ if st.sidebar.button("🚀 Запустить симуляцию", type="primary
     else:
         symbol = base_symbol
 
-    with st.spinner(f'Загрузка свечей {symbol} с Pionex за {days_to_fetch} дней...'):
+    with st.spinner(f'Загрузка свечей {symbol} с kucoin за {days_to_fetch} дней...'):
         
         # Настраиваем биржу
         exchange_config = {'enableRateLimit': True}
         if market_type == "Фьючерсы (Futures)":
             exchange_config['options'] = {'defaultType': 'swap'}
             
-        exchange = ccxt.pionex(exchange_config)
+        # Используем KuCoin как поставщика котировок в обход геоблокировок Streamlit
+        exchange = ccxt.kucoin(exchange_config)
         
         since = exchange.milliseconds() - (days_to_fetch * 24 * 60 * 60 * 1000)
         all_ohlcv = []
