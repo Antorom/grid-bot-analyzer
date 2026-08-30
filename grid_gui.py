@@ -10,7 +10,10 @@ st.sidebar.header("Настройки симуляции")
 
 # Поле для ручного ввода монеты
 symbol_input = st.sidebar.text_input("Торговая пара", value="LIT/USDT")
-symbol = symbol_input.upper().strip() # Автоматически делает буквы заглавными и убирает случайные пробелы
+base_symbol = symbol_input.upper().strip()
+
+# Переключатель типа рынка
+market_type = st.sidebar.radio("Тип рынка", ["Спот (Spot)", "Фьючерсы (Futures)"])
 days_to_fetch = st.sidebar.slider("Период истории (дней)", 7, 180, 90)
 
 st.sidebar.subheader("Стратегия")
@@ -71,11 +74,9 @@ def run_simulation_core(step_to_test, df_data):
     # Инициализация стартовых позиций бота
     for level in grid_levels:
         if bot_direction == "Лонг (Long)":
-            # В лонге считаем, что мы уже купили всё, что ниже текущей цены
             if level < last_price:
                 grid_state[level] = True
         else:
-            # В шорте считаем, что мы уже зашортили всё, что выше текущей цены
             if level + a_step > last_price:
                 grid_state[level] = True
 
@@ -103,7 +104,6 @@ def run_simulation_core(step_to_test, df_data):
                         total_profit += profit
                         t_count += 1
             else:
-                # Логика Шорта: продаем дорого (на уровне level + a_step), откупаем дешево (на уровне level)
                 if high >= level + a_step and not grid_state[level]:
                     grid_state[level] = True
                 elif low <= level and grid_state[level]:
@@ -135,8 +135,22 @@ def run_simulation_core(step_to_test, df_data):
     }
 
 if st.sidebar.button("🚀 Запустить симуляцию", type="primary"):
-    with st.spinner(f'Загрузка свечей {symbol} с Bybit за {days_to_fetch} дней...'):
-        exchange = ccxt.kucoin({'enableRateLimit': True})
+    
+    # Автоматически подстраиваем тикер под фьючерсы, если нужно
+    if market_type == "Фьючерсы (Futures)" and ":" not in base_symbol:
+        symbol = f"{base_symbol}:USDT"
+    else:
+        symbol = base_symbol
+
+    with st.spinner(f'Загрузка свечей {symbol} с Pionex за {days_to_fetch} дней...'):
+        
+        # Настраиваем биржу
+        exchange_config = {'enableRateLimit': True}
+        if market_type == "Фьючерсы (Futures)":
+            exchange_config['options'] = {'defaultType': 'swap'}
+            
+        exchange = ccxt.pionex(exchange_config)
+        
         since = exchange.milliseconds() - (days_to_fetch * 24 * 60 * 60 * 1000)
         all_ohlcv = []
         
@@ -219,4 +233,4 @@ if st.sidebar.button("🚀 Запустить симуляцию", type="primary
                         use_container_width=True
                     )
         else:
-            st.warning("Не удалось загрузить данные по этой монете.")
+            st.warning("Не удалось загрузить данные по этой монете. Проверь правильность написания тикера.")
